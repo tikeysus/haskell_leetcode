@@ -1,0 +1,16 @@
+name: haskell-leetcode
+version: 0.1.0.0
+
+executables:
+  p509:
+    main: Main.hs
+    source-dirs: p509
+    ghc-options: -O2
+    dependencies:
+      - base
+  p22:
+    main: Main.hs
+    source-dirs: p22
+    ghc-options: -O2
+    dependencies:
+      - base

@@ -3,4 +3,4 @@ module Main where
 import Solution (tribonacci)
 
 main :: IO ()
-main = readLn >>= print . tribonacci
+main = interact $ unlines . map (show . tribonacci . read) . lines

@@ -3,4 +3,4 @@ module Main where
 import Solution (sumOfTheDigitsOfHarshadNumber)
 
 main :: IO ()
-main = readLn >>= print . sumOfTheDigitsOfHarshadNumber
+main = interact $ unlines . map (show . sumOfTheDigitsOfHarshadNumber . read) . lines

@@ -2,8 +2,11 @@ module Main where
 
 import Solution (convert)
 
+chunksOf :: Int -> [a] -> [[a]]
+chunksOf _ [] = []
+chunksOf n xs = take n xs : chunksOf n (drop n xs)
+
 main :: IO ()
 main = do
-  s       <- getLine
-  numRows <- readLn
-  putStrLn (convert s numRows)
+  ls <- lines <$> getContents
+  mapM_ (\[l1,l2] -> putStrLn (convert l1 (read l2 :: Int))) (chunksOf 2 ls)

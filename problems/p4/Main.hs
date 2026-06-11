@@ -3,8 +3,11 @@ module Main where
 import Solution (findMedianSortedArrays)
 import Text.Printf (printf)
 
+chunksOf :: Int -> [a] -> [[a]]
+chunksOf _ [] = []
+chunksOf n xs = take n xs : chunksOf n (drop n xs)
+
 main :: IO ()
 main = do
-  nums1 <- fmap (read :: String -> [Int]) getLine
-  nums2 <- fmap (read :: String -> [Int]) getLine
-  printf "%.5f\n" (findMedianSortedArrays nums1 nums2)
+  ls <- lines <$> getContents
+  mapM_ (\[l1,l2] -> printf "%.5f\n" (findMedianSortedArrays (read l1 :: [Int]) (read l2 :: [Int]))) (chunksOf 2 ls)

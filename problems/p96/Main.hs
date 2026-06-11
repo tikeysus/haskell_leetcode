@@ -3,4 +3,4 @@ module Main where
 import Solution (numTrees)
 
 main :: IO ()
-main = readLn >>= print . numTrees
+main = interact $ unlines . map (show . numTrees . read) . lines

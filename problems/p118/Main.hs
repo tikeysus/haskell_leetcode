@@ -3,4 +3,4 @@ module Main where
 import Solution (generate)
 
 main :: IO ()
-main = readLn >>= print . generate
+main = interact $ unlines . map (show . generate . read) . lines

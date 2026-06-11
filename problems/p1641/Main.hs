@@ -3,4 +3,4 @@ module Main where
 import Solution (countVowelStrings)
 
 main :: IO ()
-main = readLn >>= print . countVowelStrings
+main = interact $ unlines . map (show . countVowelStrings . read) . lines

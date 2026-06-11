@@ -3,4 +3,4 @@ module Main where
 import Solution (numberOfMatches)
 
 main :: IO ()
-main = readLn >>= print . numberOfMatches
+main = interact $ unlines . map (show . numberOfMatches . read) . lines

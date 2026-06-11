@@ -3,7 +3,7 @@
 Usage: python3 scripts/test.py <problem>
   e.g. python3 scripts/test.py p509
 """
-import subprocess, sys, os, glob, shutil, json
+import subprocess, sys, os, glob, shutil, json, time
 
 # ── ANSI ──────────────────────────────────────────────────────────────────────
 RESET  = '\033[0m'
@@ -51,19 +51,32 @@ def compare(actual, expected):
             pass
     return actual == expected
 
-def run_case(binary, case_in, case_out):
-    with open(case_in)  as f: inp      = f.read()
-    with open(case_out) as f: expected = f.read().strip()
+def get_timeout(problem):
+    path = os.path.join('fixtures', problem, '.timeout')
+    try:
+        with open(path) as f:
+            return float(f.read().strip())
+    except (OSError, ValueError):
+        return 60.0
+
+def run_batch(binary, cases, timeout):
+    """Concatenate all fixture inputs and run binary once. Returns (returncode, output_lines, stderr, elapsed)."""
+    parts = []
+    for case_in in cases:
+        with open(case_in) as f:
+            content = f.read()
+        if not content.endswith('\n'):
+            content += '\n'
+        parts.append(content)
+    all_input = ''.join(parts)
+    t0 = time.monotonic()
     try:
         result = subprocess.run(
-            [binary], input=inp, capture_output=True, text=True, timeout=5
+            [binary], input=all_input, capture_output=True, text=True, timeout=timeout
         )
-        if result.returncode != 0:
-            return 'crash', result.stderr.strip(), expected, inp.strip()
-        actual = result.stdout.strip()
-        return ('pass' if compare(actual, expected) else 'fail'), actual, expected, inp.strip()
+        return result.returncode, result.stdout.splitlines(), result.stderr, time.monotonic() - t0
     except subprocess.TimeoutExpired:
-        return 'timeout', '', expected, inp.strip()
+        return None, [], '', time.monotonic() - t0
 
 # ── output ────────────────────────────────────────────────────────────────────
 def extract_ghc_errors(stderr):
@@ -116,41 +129,68 @@ def main():
         print(red(f'  no fixtures found in {fixture_dir}/'))
         sys.exit(1)
 
+    timeout = get_timeout(problem)
     print(f'  {bold(problem)}  {dim(str(len(cases)) + " cases")}          ')
     print(f'  {sep()}')
 
+    rc, output_lines, run_stderr, elapsed = run_batch(binary, cases, timeout)
+
+    if rc is None:
+        print(f'  {red("✗")}  {yellow(f"timed out (>{timeout:.0f}s) running all cases")}')
+        print(f'  {sep()}')
+        print(f'  {red(bold(str(len(cases)) + " failed"))}')
+        print()
+        sys.exit(1)
+
     passed, failed = 0, 0
 
-    for case_in in cases:
+    for i, case_in in enumerate(cases):
         case_out = case_in.replace('.in', '.out')
         name     = os.path.basename(case_in).replace('.in', '')
-        status, actual, expected, inp = run_case(binary, case_in, case_out)
+        with open(case_in)  as f: inp      = f.read().strip()
+        with open(case_out) as f: expected = f.read().strip()
 
-        if status == 'pass':
-            passed += 1
-            print(f'  {green("✓")}  {dim(name)}  {dim(inp + "  →  " + actual)}')
-        elif status == 'fail':
+        if i >= len(output_lines):
+            # Binary crashed before producing this output line
             failed += 1
+            print(f'  {red("✗")}  {name}  {yellow("no output (crash?)")}')
+            if run_stderr and i == len(output_lines):
+                msg = run_stderr.strip()[:120]
+                print(f'       {red("stderr")}    {red(msg)}')
+            continue
+
+        actual = output_lines[i].strip()
+        if compare(actual, expected):
+            passed += 1
+            display_inp = inp.replace('\n', '  ')
+            print(f'  {green("✓")}  {dim(name)}  {dim(display_inp + "  →  " + actual)}')
+        else:
+            failed += 1
+            display_inp = inp.replace('\n', '  ')
             print(f'  {red("✗")}  {name}')
-            print(f'       {dim("input")}     {inp}')
+            print(f'       {dim("input")}     {display_inp}')
             print(f'       {dim("expected")}  {expected}')
             print(f'       {red("got")}       {red(actual)}')
-        elif status == 'crash':
-            failed += 1
-            msg = actual[:120] if actual else '(no output)'
-            print(f'  {red("✗")}  {name}  {yellow("runtime error")}')
-            print(f'       {dim("input")}     {inp}')
-            print(f'       {red("stderr")}    {red(msg)}')
-        elif status == 'timeout':
-            failed += 1
-            print(f'  {red("✗")}  {name}  {yellow("timed out (>5s)")}')
-            print(f'       {dim("input")}     {inp}')
+
+    # Extra output lines mean the binary emitted more than one line per case
+    extra = len(output_lines) - len(cases)
+    if extra > 0:
+        failed += extra
+        print(f'  {red("✗")}  {yellow(f"{extra} unexpected extra output line(s) detected")}')
+        for line in output_lines[len(cases):len(cases) + 5]:
+            print(f'       {red(repr(line))}')
+
+    # Show rc != 0 stderr once if we haven't shown it yet
+    if rc != 0 and run_stderr and len(output_lines) >= len(cases):
+        print(f'  {yellow("binary exited non-zero")}')
+        print(f'  {red(run_stderr.strip()[:240])}')
 
     print(f'  {sep()}')
+    timing = dim(f'{elapsed:.2f}s')
     if failed == 0:
-        print(f'  {green(bold(f"all {passed} passed"))}')
+        print(f'  {green(bold(f"all {passed} passed"))}  {timing}')
     else:
-        print(f'  {green(str(passed) + " passed")}  {dim("·")}  {red(bold(str(failed) + " failed"))}')
+        print(f'  {green(str(passed) + " passed")}  {dim("·")}  {red(bold(str(failed) + " failed"))}  {timing}')
     print()
     sys.exit(0 if failed == 0 else 1)
 

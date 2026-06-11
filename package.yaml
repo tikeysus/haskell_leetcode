@@ -80,6 +80,12 @@ executables:
     ghc-options: -O2
     dependencies:
       - base
+  p95:
+    main: Main.hs
+    source-dirs: problems/p95
+    ghc-options: -O2
+    dependencies:
+      - base
   p96:
     main: Main.hs
     source-dirs: problems/p96
@@ -179,6 +185,66 @@ executables:
   p1688:
     main: Main.hs
     source-dirs: problems/p1688
+    ghc-options: -O2
+    dependencies:
+      - base
+  p894:
+    main: Main.hs
+    source-dirs: problems/p894
+    ghc-options: -O2
+    dependencies:
+      - base
+  p119:
+    main: Main.hs
+    source-dirs: problems/p119
+    ghc-options: -O2
+    dependencies:
+      - base
+  p1925:
+    main: Main.hs
+    source-dirs: problems/p1925
+    ghc-options: -O2
+    dependencies:
+      - base
+  p3304:
+    main: Main.hs
+    source-dirs: problems/p3304
+    ghc-options: -O2
+    dependencies:
+      - base
+  p3178:
+    main: Main.hs
+    source-dirs: problems/p3178
+    ghc-options: -O2
+    dependencies:
+      - base
+  p1415:
+    main: Main.hs
+    source-dirs: problems/p1415
+    ghc-options: -O2
+    dependencies:
+      - base
+  p17:
+    main: Main.hs
+    source-dirs: problems/p17
+    ghc-options: -O2
+    dependencies:
+      - base
+  p216:
+    main: Main.hs
+    source-dirs: problems/p216
+    ghc-options: -O2
+    dependencies:
+      - base
+  p2081:
+    main: Main.hs
+    source-dirs: problems/p2081
+    ghc-options: -O2
+    dependencies:
+      - base
+  p3537:
+    main: Main.hs
+    source-dirs: problems/p3537
     ghc-options: -O2
     dependencies:
       - base

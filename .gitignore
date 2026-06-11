@@ -1,2 +1,4 @@
 .stack-work/
 */Solution.hs
+__pycache__/
+*.pyc

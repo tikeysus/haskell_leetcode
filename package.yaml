@@ -2,15 +2,69 @@ name: haskell-leetcode
 version: 0.1.0.0
 
 executables:
-  p509:
+  p1:
     main: Main.hs
-    source-dirs: problems/p509
+    source-dirs: problems/p1
+    ghc-options: -O2
+    dependencies:
+      - base
+  p3:
+    main: Main.hs
+    source-dirs: problems/p3
+    ghc-options: -O2
+    dependencies:
+      - base
+  p4:
+    main: Main.hs
+    source-dirs: problems/p4
+    ghc-options: -O2
+    dependencies:
+      - base
+  p5:
+    main: Main.hs
+    source-dirs: problems/p5
+    ghc-options: -O2
+    dependencies:
+      - base
+  p6:
+    main: Main.hs
+    source-dirs: problems/p6
+    ghc-options: -O2
+    dependencies:
+      - base
+  p8:
+    main: Main.hs
+    source-dirs: problems/p8
     ghc-options: -O2
     dependencies:
       - base
   p22:
     main: Main.hs
     source-dirs: problems/p22
+    ghc-options: -O2
+    dependencies:
+      - base
+  p28:
+    main: Main.hs
+    source-dirs: problems/p28
+    ghc-options: -O2
+    dependencies:
+      - base
+  p29:
+    main: Main.hs
+    source-dirs: problems/p29
+    ghc-options: -O2
+    dependencies:
+      - base
+  p38:
+    main: Main.hs
+    source-dirs: problems/p38
+    ghc-options: -O2
+    dependencies:
+      - base
+  p509:
+    main: Main.hs
+    source-dirs: problems/p509
     ghc-options: -O2
     dependencies:
       - base

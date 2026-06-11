@@ -6,3 +6,6 @@ test-%:
 
 lint:
 	@python3 scripts/lint.py
+
+test-harness:
+	@python3 scripts/test_harness.py

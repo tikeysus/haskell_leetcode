@@ -54,7 +54,8 @@ def compare(actual, expected):
 def get_timeout(problem):
     path = os.path.join('fixtures', problem, '.timeout')
     try:
-        return float(open(path).read().strip())
+        with open(path) as f:
+            return float(f.read().strip())
     except (OSError, ValueError):
         return 60.0
 

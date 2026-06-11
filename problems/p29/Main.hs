@@ -2,8 +2,11 @@ module Main where
 
 import Solution (divide)
 
+chunksOf :: Int -> [a] -> [[a]]
+chunksOf _ [] = []
+chunksOf n xs = take n xs : chunksOf n (drop n xs)
+
 main :: IO ()
 main = do
-  dividend <- readLn
-  divisor  <- readLn
-  print (divide dividend divisor)
+  ls <- lines <$> getContents
+  mapM_ (\[l1,l2] -> print (divide (read l1 :: Int) (read l2 :: Int))) (chunksOf 2 ls)

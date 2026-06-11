@@ -3,4 +3,4 @@ module Main where
 import Solution (getMaximumGenerated)
 
 main :: IO ()
-main = readLn >>= print . getMaximumGenerated
+main = interact $ unlines . map (show . getMaximumGenerated . read) . lines

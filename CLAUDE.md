@@ -9,7 +9,7 @@ make fixtures-p<N>   # generate fixtures for problem N (runs scripts/gen_p<N>.py
 make test-p<N>       # build and test problem N against fixtures
 ```
 
-The test runner (`scripts/test.py`) copies `submissions/p<N>.hs` → `problems/p<N>/Solution.hs`, builds with `stack build haskell-leetcode:exe:p<N>`, then runs each fixture through the binary and diffs stdout against the expected output. For JSON outputs (lists), comparison is order-insensitive (`sorted(json.loads(actual)) == sorted(json.loads(expected))`). All other outputs are compared as stripped strings.
+The test runner (`scripts/test.py`) copies `submissions/p<N>.hs` → `problems/p<N>/Solution.hs`, builds with `stack build haskell-leetcode:exe:p<N>`, concatenates all fixture inputs into one stdin stream, runs the binary once, then matches output lines 1:1 against `.out` files. For JSON outputs (lists), comparison is order-insensitive (`sorted(json.loads(actual)) == sorted(json.loads(expected))`). All other outputs are compared as stripped strings.
 
 ## Architecture
 
@@ -73,66 +73,71 @@ This is overwritten on every `make test-p<N>` run, so content beyond the module 
 
 ### `problems/p<N>/Main.hs` — I/O patterns
 
-Use the simplest form that handles the input type:
+The binary reads **all test cases from stdin until EOF** and emits one result per line. The test runner concatenates all fixture inputs and runs the binary once.
 
-| Input | Pattern |
+**Single-arg problems** — use `interact`:
+
+| Input → Output | Pattern |
 |---|---|
-| Single `Int` | `readLn >>= print . f` |
-| Single `String` (result is `Int`/`Bool`) | `getLine >>= print . f` |
-| Single `String` (result is `String`) | `getLine >>= putStrLn . f` |
-| `[Int]` as JSON array | `fmap (read :: String -> [Int]) getLine` |
-| Multiple scalars | `do` block with one `readLn`/`getLine` per arg |
-| `Double` output | `printf "%.5f\n" result` (import `Text.Printf`) |
+| `Int` → any (via `show`) | `interact $ unlines . map (show . f . read) . lines` |
+| `Int` → `String` (no quotes) | `interact $ unlines . map (f . read) . lines` |
+| `String` → any (via `show`) | `interact $ unlines . map (show . f) . lines` |
+| `String` → `String` (no quotes) | `interact $ unlines . map f . lines` |
 
-`print` (which adds quotes) is used for `Int`, `[Int]`, and `Bool` results. `putStrLn` (no quotes) is used for `String` results.
+**Multi-arg problems** — define `chunksOf` locally and use `mapM_`:
+
+```haskell
+chunksOf :: Int -> [a] -> [[a]]
+chunksOf _ [] = []
+chunksOf n xs = take n xs : chunksOf n (drop n xs)
+```
+
+For `Double` output use `printf "%.5f\n"` inside `mapM_` (it prints directly; don't wrap in `unlines`).
+
+`print` (adds quotes) is used for `Int`, `Integer`, `[Int]`, `[[Int]]`, `[String]`, and `Bool`. `putStrLn` (no quotes) for `String` and `Char`.
 
 Real examples:
 
 ```haskell
 -- p509: single Int in, Int out
-main = readLn >>= print . fib
+main = interact $ unlines . map (show . fib . read) . lines
 
 -- p22: single Int in, [String] out (order-insensitive compare)
-main = readLn >>= print . generateParenthesis
+main = interact $ unlines . map (show . generateParenthesis . read) . lines
 
 -- p38: single Int in, String out
-main = readLn >>= putStrLn . countAndSay
+main = interact $ unlines . map (countAndSay . read) . lines
 
 -- p5: single String in, String out
-main = getLine >>= putStrLn . longestPalindrome
+main = interact $ unlines . map longestPalindrome . lines
 
 -- p8: single String in, Int out
-main = getLine >>= print . myAtoi
+main = interact $ unlines . map (show . myAtoi) . lines
 
--- p1: [Int] + Int in, [Int] out
+-- p1: [Int] + Int in, [Int] out  (2 lines per case)
 main = do
-  nums   <- fmap (read :: String -> [Int]) getLine
-  target <- readLn
-  print (twoSum nums target)
+  ls <- lines <$> getContents
+  mapM_ (\[l1,l2] -> print (twoSum (read l1 :: [Int]) (read l2 :: Int))) (chunksOf 2 ls)
 
 -- p4: [Int] + [Int] in, Double out (5 decimal places)
 main = do
-  nums1 <- fmap (read :: String -> [Int]) getLine
-  nums2 <- fmap (read :: String -> [Int]) getLine
-  printf "%.5f\n" (findMedianSortedArrays nums1 nums2)
+  ls <- lines <$> getContents
+  mapM_ (\[l1,l2] -> printf "%.5f\n" (findMedianSortedArrays (read l1 :: [Int]) (read l2 :: [Int]))) (chunksOf 2 ls)
 
 -- p6: String + Int in, String out
 main = do
-  s       <- getLine
-  numRows <- readLn
-  putStrLn (convert s numRows)
+  ls <- lines <$> getContents
+  mapM_ (\[l1,l2] -> putStrLn (convert l1 (read l2 :: Int))) (chunksOf 2 ls)
 
 -- p29: two Ints in, Int out
 main = do
-  dividend <- readLn
-  divisor  <- readLn
-  print (divide dividend divisor)
+  ls <- lines <$> getContents
+  mapM_ (\[l1,l2] -> print (divide (read l1 :: Int) (read l2 :: Int))) (chunksOf 2 ls)
 
 -- p28: two Strings in, Int out
 main = do
-  haystack <- getLine
-  needle   <- getLine
-  print (strStr haystack needle)
+  ls <- lines <$> getContents
+  mapM_ (\[l1,l2] -> print (strStr l1 l2)) (chunksOf 2 ls)
 ```
 
 ### Fixture format
@@ -152,9 +157,48 @@ main = do
 | `Int` | raw decimal |
 | `String` | raw characters, no quotes |
 | `[Int]` or `[String]` | JSON array (order doesn't matter; test.py sorts both sides) |
+| `[[Int]]` | JSON array of arrays; test.py sorts outer list (rows), not inner |
 | `Double` | 5 decimal places, e.g. `2.00000` |
+| `Char` | single raw character, no quotes |
 
 Fixture files are zero-padded: `00.in`/`00.out` for sets under 100, `000.in`/`000.out` for sets of 100+.
+
+### Tree output (problems returning `TreeNode` lists)
+
+Define the `Tree` type in `submissions/p<N>.hs` and export it so both `Main.hs` and the solution share the same type. `Main.hs` owns the serializer.
+
+```haskell
+-- submissions/p<N>.hs
+module Solution (Tree(..), solveFn) where
+
+data Tree a = Leaf | Node (Tree a) a (Tree a)
+
+solveFn :: Int -> [Tree Int]
+solveFn = ...
+```
+
+```haskell
+-- problems/p<N>/Main.hs
+module Main where
+
+import Solution (Tree(..), solveFn)
+import Data.List (intercalate)
+
+serialize :: Tree Int -> String
+serialize t = "[" ++ intercalate "," (map showNode (levelOrder [t])) ++ "]"
+  where
+    showNode Nothing  = "null"
+    showNode (Just x) = show x
+    levelOrder []              = []
+    levelOrder (Leaf   : rest) = Nothing : levelOrder rest
+    levelOrder (Node l v r : rest) = Just v : levelOrder (rest ++ [l, r])
+
+main :: IO ()
+main = interact $ unlines . map (serializeTrees . solveFn . read) . lines
+  where serializeTrees ts = "[" ++ intercalate "," (map serialize ts) ++ "]"
+```
+
+The outer `[serialize t1, serialize t2, ...]` format is a JSON array of LeetCode tree arrays. `test.py`'s `sorted(json.loads(...))` sorts the outer list lexicographically, so order between trees doesn't matter.
 
 ### Two generator styles
 

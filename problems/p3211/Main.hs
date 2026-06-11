@@ -3,4 +3,4 @@ module Main where
 import Solution (validStrings)
 
 main :: IO ()
-main = readLn >>= print . validStrings
+main = interact $ unlines . map (show . validStrings . read) . lines

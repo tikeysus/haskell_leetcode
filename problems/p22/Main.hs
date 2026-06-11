@@ -3,4 +3,4 @@ module Main where
 import Solution (generateParenthesis)
 
 main :: IO ()
-main = readLn >>= print . generateParenthesis
+main = interact $ unlines . map (show . generateParenthesis . read) . lines

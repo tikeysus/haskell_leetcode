@@ -3,4 +3,4 @@ module Main where
 import Solution (simplifiedFractions)
 
 main :: IO ()
-main = readLn >>= print . simplifiedFractions
+main = interact $ unlines . map (show . simplifiedFractions . read) . lines

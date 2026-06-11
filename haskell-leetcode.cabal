@@ -14,7 +14,7 @@ executable p22
       Solution
       Paths_haskell_leetcode
   hs-source-dirs:
-      p22
+      problems/p22
   ghc-options: -O2
   build-depends:
       base
@@ -26,7 +26,7 @@ executable p509
       Solution
       Paths_haskell_leetcode
   hs-source-dirs:
-      p509
+      problems/p509
   ghc-options: -O2
   build-depends:
       base

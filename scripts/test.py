@@ -23,7 +23,7 @@ def sep():     return dim('─' * 50)
 # ── pipeline steps ────────────────────────────────────────────────────────────
 def copy_submission(problem):
     src = os.path.join('submissions', f'{problem}.hs')
-    dst = os.path.join(problem, 'Solution.hs')
+    dst = os.path.join('problems', problem, 'Solution.hs')
     if not os.path.exists(src):
         print(f'\n  {red("error")}  submissions/{problem}.hs not found\n')
         sys.exit(1)
@@ -83,7 +83,7 @@ def extract_ghc_errors(stderr):
     return lines[start:end]
 
 def show_compile_error(problem, stderr):
-    abs_solution = os.path.abspath(os.path.join(problem, 'Solution.hs'))
+    abs_solution = os.path.abspath(os.path.join('problems', problem, 'Solution.hs'))
     print(f'\n  {bold(problem)}  {red("compile error")}')
     print(f'  {sep()}')
     for line in extract_ghc_errors(stderr):

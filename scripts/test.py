@@ -53,10 +53,14 @@ def compare(actual, expected):
 
 def run_batch(binary, cases):
     """Concatenate all fixture inputs and run binary once. Returns (returncode, output_lines, stderr)."""
-    all_input = ''
+    parts = []
     for case_in in cases:
         with open(case_in) as f:
-            all_input += f.read()
+            content = f.read()
+        if not content.endswith('\n'):
+            content += '\n'
+        parts.append(content)
+    all_input = ''.join(parts)
     try:
         result = subprocess.run(
             [binary], input=all_input, capture_output=True, text=True, timeout=60
@@ -145,7 +149,7 @@ def main():
                 print(f'       {red("stderr")}    {red(msg)}')
             continue
 
-        actual = output_lines[i]
+        actual = output_lines[i].strip()
         if compare(actual, expected):
             passed += 1
             display_inp = inp.replace('\n', '  ')
@@ -157,6 +161,14 @@ def main():
             print(f'       {dim("input")}     {display_inp}')
             print(f'       {dim("expected")}  {expected}')
             print(f'       {red("got")}       {red(actual)}')
+
+    # Extra output lines mean the binary emitted more than one line per case
+    extra = len(output_lines) - len(cases)
+    if extra > 0:
+        failed += extra
+        print(f'  {red("✗")}  {yellow(f"{extra} unexpected extra output line(s) detected")}')
+        for line in output_lines[len(cases):len(cases) + 5]:
+            print(f'       {red(repr(line))}')
 
     # Show rc != 0 stderr once if we haven't shown it yet
     if rc != 0 and run_stderr and len(output_lines) >= len(cases):

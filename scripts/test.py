@@ -3,7 +3,7 @@
 Usage: python3 scripts/test.py <problem>
   e.g. python3 scripts/test.py p509
 """
-import subprocess, sys, os, glob, shutil, json
+import subprocess, sys, os, glob, shutil, json, time
 
 # ── ANSI ──────────────────────────────────────────────────────────────────────
 RESET  = '\033[0m'
@@ -51,8 +51,15 @@ def compare(actual, expected):
             pass
     return actual == expected
 
-def run_batch(binary, cases):
-    """Concatenate all fixture inputs and run binary once. Returns (returncode, output_lines, stderr)."""
+def get_timeout(problem):
+    path = os.path.join('fixtures', problem, '.timeout')
+    try:
+        return float(open(path).read().strip())
+    except (OSError, ValueError):
+        return 60.0
+
+def run_batch(binary, cases, timeout):
+    """Concatenate all fixture inputs and run binary once. Returns (returncode, output_lines, stderr, elapsed)."""
     parts = []
     for case_in in cases:
         with open(case_in) as f:
@@ -61,13 +68,14 @@ def run_batch(binary, cases):
             content += '\n'
         parts.append(content)
     all_input = ''.join(parts)
+    t0 = time.monotonic()
     try:
         result = subprocess.run(
-            [binary], input=all_input, capture_output=True, text=True, timeout=60
+            [binary], input=all_input, capture_output=True, text=True, timeout=timeout
         )
-        return result.returncode, result.stdout.splitlines(), result.stderr
+        return result.returncode, result.stdout.splitlines(), result.stderr, time.monotonic() - t0
     except subprocess.TimeoutExpired:
-        return None, [], ''
+        return None, [], '', time.monotonic() - t0
 
 # ── output ────────────────────────────────────────────────────────────────────
 def extract_ghc_errors(stderr):
@@ -120,13 +128,14 @@ def main():
         print(red(f'  no fixtures found in {fixture_dir}/'))
         sys.exit(1)
 
+    timeout = get_timeout(problem)
     print(f'  {bold(problem)}  {dim(str(len(cases)) + " cases")}          ')
     print(f'  {sep()}')
 
-    rc, output_lines, run_stderr = run_batch(binary, cases)
+    rc, output_lines, run_stderr, elapsed = run_batch(binary, cases, timeout)
 
     if rc is None:
-        print(f'  {red("✗")}  {yellow("timed out (>60s) running all cases")}')
+        print(f'  {red("✗")}  {yellow(f"timed out (>{timeout:.0f}s) running all cases")}')
         print(f'  {sep()}')
         print(f'  {red(bold(str(len(cases)) + " failed"))}')
         print()
@@ -176,10 +185,11 @@ def main():
         print(f'  {red(run_stderr.strip()[:240])}')
 
     print(f'  {sep()}')
+    timing = dim(f'{elapsed:.2f}s')
     if failed == 0:
-        print(f'  {green(bold(f"all {passed} passed"))}')
+        print(f'  {green(bold(f"all {passed} passed"))}  {timing}')
     else:
-        print(f'  {green(str(passed) + " passed")}  {dim("·")}  {red(bold(str(failed) + " failed"))}')
+        print(f'  {green(str(passed) + " passed")}  {dim("·")}  {red(bold(str(failed) + " failed"))}  {timing}')
     print()
     sys.exit(0 if failed == 0 else 1)
 

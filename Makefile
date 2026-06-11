@@ -3,3 +3,6 @@ fixtures-%:
 
 test-%:
 	@python3 scripts/test.py $*
+
+lint:
+	@python3 scripts/lint.py

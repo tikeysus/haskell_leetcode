@@ -9,7 +9,7 @@ make fixtures-p<N>   # generate fixtures for problem N (runs scripts/gen_p<N>.py
 make test-p<N>       # build and test problem N against fixtures
 ```
 
-The test runner (`scripts/test.py`) copies `submissions/p<N>.hs` → `p<N>/Solution.hs`, builds with `stack build haskell-leetcode:exe:p<N>`, then runs each fixture through the binary and diffs stdout against the expected output. For JSON outputs (lists), comparison is order-insensitive.
+The test runner (`scripts/test.py`) copies `submissions/p<N>.hs` → `problems/p<N>/Solution.hs`, builds with `stack build haskell-leetcode:exe:p<N>`, then runs each fixture through the binary and diffs stdout against the expected output. For JSON outputs (lists), comparison is order-insensitive (`sorted(json.loads(actual)) == sorted(json.loads(expected))`). All other outputs are compared as stripped strings.
 
 ## Architecture
 
@@ -21,7 +21,7 @@ Each problem lives in three places:
 
 Adding a new problem requires:
 - `problems/p<N>/Main.hs` — parse stdin, call the solution function, print result
-- `problems/p<N>/Solution.hs` — placeholder (will be overwritten by the harness)
+- `problems/p<N>/Solution.hs` — placeholder (will be overwritten by the harness); must declare `module Solution` so the project compiles before the first test run
 - `submissions/p<N>.hs` — the real solution
 - `scripts/gen_p<N>.py` — oracle + fixture generator
 - A new executable stanza in `package.yaml` with `source-dirs: problems/p<N>`
@@ -32,4 +32,198 @@ Adding a new problem requires:
 
 ## Stack / build
 
-`stack.yaml` pins the resolver. All dependencies are `base`-only by default; add extras to the relevant executable stanza in `package.yaml` when needed.
+`stack.yaml` pins the resolver. All dependencies are `base`-only by default; add extras to the relevant executable stanza in `package.yaml` when needed. All executables use `-O2`.
+
+---
+
+## Conventions (derived from existing problems)
+
+### `package.yaml` stanza
+
+Every executable stanza follows this pattern exactly:
+
+```yaml
+  p<N>:
+    main: Main.hs
+    source-dirs: problems/p<N>
+    ghc-options: -O2
+    dependencies:
+      - base
+```
+
+Add extra packages to `dependencies` only when needed (e.g. `containers` for `Data.Map`).
+
+### `submissions/p<N>.hs` — module declaration
+
+```haskell
+module Solution (<exportedFunction>) where
+```
+
+Exports exactly the function(s) imported by `Main.hs`. Must match the import name character-for-character.
+
+### `problems/p<N>/Solution.hs` — placeholder
+
+Must contain at minimum:
+
+```haskell
+module Solution where
+```
+
+This is overwritten on every `make test-p<N>` run, so content beyond the module declaration doesn't matter. Its only purpose is to make the project compile before the first test.
+
+### `problems/p<N>/Main.hs` — I/O patterns
+
+Use the simplest form that handles the input type:
+
+| Input | Pattern |
+|---|---|
+| Single `Int` | `readLn >>= print . f` |
+| Single `String` (result is `Int`/`Bool`) | `getLine >>= print . f` |
+| Single `String` (result is `String`) | `getLine >>= putStrLn . f` |
+| `[Int]` as JSON array | `fmap (read :: String -> [Int]) getLine` |
+| Multiple scalars | `do` block with one `readLn`/`getLine` per arg |
+| `Double` output | `printf "%.5f\n" result` (import `Text.Printf`) |
+
+`print` (which adds quotes) is used for `Int`, `[Int]`, and `Bool` results. `putStrLn` (no quotes) is used for `String` results.
+
+Real examples:
+
+```haskell
+-- p509: single Int in, Int out
+main = readLn >>= print . fib
+
+-- p22: single Int in, [String] out (order-insensitive compare)
+main = readLn >>= print . generateParenthesis
+
+-- p38: single Int in, String out
+main = readLn >>= putStrLn . countAndSay
+
+-- p5: single String in, String out
+main = getLine >>= putStrLn . longestPalindrome
+
+-- p8: single String in, Int out
+main = getLine >>= print . myAtoi
+
+-- p1: [Int] + Int in, [Int] out
+main = do
+  nums   <- fmap (read :: String -> [Int]) getLine
+  target <- readLn
+  print (twoSum nums target)
+
+-- p4: [Int] + [Int] in, Double out (5 decimal places)
+main = do
+  nums1 <- fmap (read :: String -> [Int]) getLine
+  nums2 <- fmap (read :: String -> [Int]) getLine
+  printf "%.5f\n" (findMedianSortedArrays nums1 nums2)
+
+-- p6: String + Int in, String out
+main = do
+  s       <- getLine
+  numRows <- readLn
+  putStrLn (convert s numRows)
+
+-- p29: two Ints in, Int out
+main = do
+  dividend <- readLn
+  divisor  <- readLn
+  print (divide dividend divisor)
+
+-- p28: two Strings in, Int out
+main = do
+  haystack <- getLine
+  needle   <- getLine
+  print (strStr haystack needle)
+```
+
+### Fixture format
+
+`.in` files, one value per line:
+
+| Type | Representation |
+|---|---|
+| `Int` | raw decimal, e.g. `42` |
+| `String` | raw characters, no quotes, e.g. `abcabc` |
+| `[Int]` | JSON array, e.g. `[2,7,11,15]` |
+
+`.out` files:
+
+| Type | Representation |
+|---|---|
+| `Int` | raw decimal |
+| `String` | raw characters, no quotes |
+| `[Int]` or `[String]` | JSON array (order doesn't matter; test.py sorts both sides) |
+| `Double` | 5 decimal places, e.g. `2.00000` |
+
+Fixture files are zero-padded: `00.in`/`00.out` for sets under 100, `000.in`/`000.out` for sets of 100+.
+
+### Two generator styles
+
+**Enumerated** (problem domain is small enough to generate from scratch):
+
+The generator is self-contained — it implements the oracle inline and iterates over all valid inputs. Used when the full domain fits in a few dozen cases (p22, p509).
+
+```python
+#!/usr/bin/env python3
+"""Generate all N fixtures for p<N> (<Title>)."""
+import os, json
+
+def oracle(x):
+    ...  # ground-truth Python implementation
+
+out = os.path.join(os.path.dirname(__file__), '..', 'fixtures', 'p<N>')
+os.makedirs(out, exist_ok=True)
+
+for n in range(...):
+    with open(os.path.join(out, f'{n:02d}.in'),  'w') as f: f.write(f'{n}\n')
+    with open(os.path.join(out, f'{n:02d}.out'), 'w') as f: f.write(str(oracle(n)) + '\n')
+
+print(f'Generated N fixtures in fixtures/p<N>/')
+```
+
+**Extracted** (cases pulled from the `leetcode-testcase-extractor` data directory):
+
+Used when the domain is large or unbounded. The extractor lives at `~/Documents/projects/leetcode-testcase-extractor/data/<N>. <Title>/`. The generator reads that file and parses `if <args>: return <ret>` lines with a fixed `parse_cases` helper. Used by p1, p3, p4, p5, p6, p8, p28, p29, p38.
+
+```python
+#!/usr/bin/env python3
+"""Generate fixtures for p<N> (<Title>)."""
+import ast, os, re
+
+DATA = os.path.join(os.path.expanduser("~"), "Documents", "projects",
+                    "leetcode-testcase-extractor", "data",
+                    "<N>. <Title>")
+OUT  = os.path.join(os.path.dirname(__file__), "..", "fixtures", "p<N>")
+os.makedirs(OUT, exist_ok=True)
+
+def parse_cases(path):
+    cases = []
+    for line in open(path):
+        m = re.match(r'\s+if (.+): return (.+)', line.rstrip())
+        if not m:
+            continue
+        try:
+            ret  = ast.literal_eval(m.group(2).strip())
+            tree = ast.parse(m.group(1), mode='eval')
+            args = {}
+            def collect(node):
+                if isinstance(node, ast.BoolOp):
+                    for v in node.values: collect(v)
+                elif isinstance(node, ast.Compare):
+                    args[node.left.id] = ast.literal_eval(node.comparators[0])
+            collect(tree.body)
+            cases.append((args, ret))
+        except Exception:
+            pass
+    return cases
+
+cases = parse_cases(DATA)
+for i, (args, ret) in enumerate(cases):
+    with open(os.path.join(OUT, f"{i:02d}.in"),  "w") as f:
+        f.write(...)   # format args per the Main.hs I/O contract
+    with open(os.path.join(OUT, f"{i:02d}.out"), "w") as f:
+        f.write(...)   # format ret to match Main.hs output
+
+print(f"Generated {len(cases)} fixtures in fixtures/p<N>/")
+```
+
+The `args` dict keys match the LeetCode parameter names (e.g. `args["nums"]`, `args["target"]`, `args["s"]`, `args["numRows"]`). The `ret` value is already a Python literal (int, float, str, list).

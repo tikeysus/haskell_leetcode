@@ -20,6 +20,102 @@ executable p1
       base
   default-language: Haskell2010
 
+executable p1137
+  main-is: Main.hs
+  other-modules:
+      Solution
+      Paths_haskell_leetcode
+  hs-source-dirs:
+      problems/p1137
+  ghc-options: -O2
+  build-depends:
+      base
+  default-language: Haskell2010
+
+executable p1175
+  main-is: Main.hs
+  other-modules:
+      Solution
+      Paths_haskell_leetcode
+  hs-source-dirs:
+      problems/p1175
+  ghc-options: -O2
+  build-depends:
+      base
+  default-language: Haskell2010
+
+executable p118
+  main-is: Main.hs
+  other-modules:
+      Solution
+      Paths_haskell_leetcode
+  hs-source-dirs:
+      problems/p118
+  ghc-options: -O2
+  build-depends:
+      base
+  default-language: Haskell2010
+
+executable p1344
+  main-is: Main.hs
+  other-modules:
+      Solution
+      Paths_haskell_leetcode
+  hs-source-dirs:
+      problems/p1344
+  ghc-options: -O2
+  build-depends:
+      base
+  default-language: Haskell2010
+
+executable p1447
+  main-is: Main.hs
+  other-modules:
+      Solution
+      Paths_haskell_leetcode
+  hs-source-dirs:
+      problems/p1447
+  ghc-options: -O2
+  build-depends:
+      base
+  default-language: Haskell2010
+
+executable p1641
+  main-is: Main.hs
+  other-modules:
+      Solution
+      Paths_haskell_leetcode
+  hs-source-dirs:
+      problems/p1641
+  ghc-options: -O2
+  build-depends:
+      base
+  default-language: Haskell2010
+
+executable p1646
+  main-is: Main.hs
+  other-modules:
+      Solution
+      Paths_haskell_leetcode
+  hs-source-dirs:
+      problems/p1646
+  ghc-options: -O2
+  build-depends:
+      base
+  default-language: Haskell2010
+
+executable p1688
+  main-is: Main.hs
+  other-modules:
+      Solution
+      Paths_haskell_leetcode
+  hs-source-dirs:
+      problems/p1688
+  ghc-options: -O2
+  build-depends:
+      base
+  default-language: Haskell2010
+
 executable p22
   main-is: Main.hs
   other-modules:
@@ -68,6 +164,42 @@ executable p3
       base
   default-language: Haskell2010
 
+executable p3099
+  main-is: Main.hs
+  other-modules:
+      Solution
+      Paths_haskell_leetcode
+  hs-source-dirs:
+      problems/p3099
+  ghc-options: -O2
+  build-depends:
+      base
+  default-language: Haskell2010
+
+executable p3211
+  main-is: Main.hs
+  other-modules:
+      Solution
+      Paths_haskell_leetcode
+  hs-source-dirs:
+      problems/p3211
+  ghc-options: -O2
+  build-depends:
+      base
+  default-language: Haskell2010
+
+executable p3272
+  main-is: Main.hs
+  other-modules:
+      Solution
+      Paths_haskell_leetcode
+  hs-source-dirs:
+      problems/p3272
+  ghc-options: -O2
+  build-depends:
+      base
+  default-language: Haskell2010
+
 executable p38
   main-is: Main.hs
   other-modules:
@@ -87,6 +219,18 @@ executable p4
       Paths_haskell_leetcode
   hs-source-dirs:
       problems/p4
+  ghc-options: -O2
+  build-depends:
+      base
+  default-language: Haskell2010
+
+executable p401
+  main-is: Main.hs
+  other-modules:
+      Solution
+      Paths_haskell_leetcode
+  hs-source-dirs:
+      problems/p401
   ghc-options: -O2
   build-depends:
       base
@@ -116,6 +260,30 @@ executable p509
       base
   default-language: Haskell2010
 
+executable p51
+  main-is: Main.hs
+  other-modules:
+      Solution
+      Paths_haskell_leetcode
+  hs-source-dirs:
+      problems/p51
+  ghc-options: -O2
+  build-depends:
+      base
+  default-language: Haskell2010
+
+executable p52
+  main-is: Main.hs
+  other-modules:
+      Solution
+      Paths_haskell_leetcode
+  hs-source-dirs:
+      problems/p52
+  ghc-options: -O2
+  build-depends:
+      base
+  default-language: Haskell2010
+
 executable p6
   main-is: Main.hs
   other-modules:
@@ -128,6 +296,30 @@ executable p6
       base
   default-language: Haskell2010
 
+executable p70
+  main-is: Main.hs
+  other-modules:
+      Solution
+      Paths_haskell_leetcode
+  hs-source-dirs:
+      problems/p70
+  ghc-options: -O2
+  build-depends:
+      base
+  default-language: Haskell2010
+
+executable p77
+  main-is: Main.hs
+  other-modules:
+      Solution
+      Paths_haskell_leetcode
+  hs-source-dirs:
+      problems/p77
+  ghc-options: -O2
+  build-depends:
+      base
+  default-language: Haskell2010
+
 executable p8
   main-is: Main.hs
   other-modules:
@@ -135,6 +327,42 @@ executable p8
       Paths_haskell_leetcode
   hs-source-dirs:
       problems/p8
+  ghc-options: -O2
+  build-depends:
+      base
+  default-language: Haskell2010
+
+executable p89
+  main-is: Main.hs
+  other-modules:
+      Solution
+      Paths_haskell_leetcode
+  hs-source-dirs:
+      problems/p89
+  ghc-options: -O2
+  build-depends:
+      base
+  default-language: Haskell2010
+
+executable p96
+  main-is: Main.hs
+  other-modules:
+      Solution
+      Paths_haskell_leetcode
+  hs-source-dirs:
+      problems/p96
+  ghc-options: -O2
+  build-depends:
+      base
+  default-language: Haskell2010
+
+executable p967
+  main-is: Main.hs
+  other-modules:
+      Solution
+      Paths_haskell_leetcode
+  hs-source-dirs:
+      problems/p967
   ghc-options: -O2
   build-depends:
       base

@@ -62,6 +62,28 @@ For problem 17, the domain is `8 + 8^2 + 8^3 + 8^4 = 4,680` valid digit strings.
 | [3099. Harshad Number](https://leetcode.com/problems/harshad-number/) | 100 | 1 <= x <= 100 |
 | [3304. Find the K-th Character in String Game I](https://leetcode.com/problems/find-the-k-th-character-in-string-game-i/) | 500 | 1 <= k <= 500 |
 
+## Additional Single-Integer Problems
+
+Problems discovered by scanning the complete catalog for single-parameter domains not in the initial curated sets above. All are fully enumerable from constraints alone.
+
+| Problem | Complete top-level input domain | Published constraints | Haskell appeal |
+|---|---:|---|---|
+| [357. Count Numbers with Unique Digits](https://leetcode.com/problems/count-numbers-with-unique-digits/) | 9 | 0 <= n <= 8 | Combinatorial counting: choices per digit position |
+| [479. Largest Palindrome Product](https://leetcode.com/problems/largest-palindrome-product/) | 8 | 1 <= n <= 8 | Generate candidate palindromes lazily, check divisibility |
+| [526. Beautiful Arrangement](https://leetcode.com/problems/beautiful-arrangement/) | 15 | 1 <= n <= 15 | Backtracking count; same shape as N-Queens |
+| [343. Integer Break](https://leetcode.com/problems/integer-break/) | 57 | 2 <= n <= 58 | DP / closed-form with powers of 3 |
+| [264. Ugly Number II](https://leetcode.com/problems/ugly-number-ii/) | 1,690 | 1 <= n <= 1690 | Lazy merge of three infinite streams (×2, ×3, ×5) — canonical Haskell |
+| [12. Integer to Roman](https://leetcode.com/problems/integer-to-roman/) | 3,999 | 1 <= num <= 3999 | Descending value table, fold with `divMod` |
+| [172. Factorial Trailing Zeroes](https://leetcode.com/problems/factorial-trailing-zeroes/) | 10,001 | 0 <= n <= 10^4 | Sum of ⌊n/5^k⌋ terms |
+| [279. Perfect Squares](https://leetcode.com/problems/perfect-squares/) | 10,000 | 1 <= n <= 10^4 | BFS or DP over bounded range |
+| [412. Fizz Buzz](https://leetcode.com/problems/fizz-buzz/) | 10,000 | 1 <= n <= 10^4 | Trivial guard; `[String]` output |
+
+## Additional Multi-Argument Problems
+
+| Problem | Valid argument tuples | Published constraints |
+|---|---:|---|
+| [62. Unique Paths](https://leetcode.com/problems/unique-paths/) | 10,000 | 1 <= m, n <= 100 |
+
 ## Misleadingly Small Constraints
 
 | Problem | Approximate valid calls | Why it is larger than it looks |

@@ -68,6 +68,18 @@ executable p119
       base
   default-language: Haskell2010
 
+executable p12
+  main-is: Main.hs
+  other-modules:
+      Solution
+      Paths_haskell_leetcode
+  hs-source-dirs:
+      problems/p12
+  ghc-options: -O2
+  build-depends:
+      base
+  default-language: Haskell2010
+
 executable p1344
   main-is: Main.hs
   other-modules:
@@ -200,6 +212,18 @@ executable p22
       base
   default-language: Haskell2010
 
+executable p264
+  main-is: Main.hs
+  other-modules:
+      Solution
+      Paths_haskell_leetcode
+  hs-source-dirs:
+      problems/p264
+  ghc-options: -O2
+  build-depends:
+      base
+  default-language: Haskell2010
+
 executable p28
   main-is: Main.hs
   other-modules:
@@ -296,6 +320,18 @@ executable p3304
       base
   default-language: Haskell2010
 
+executable p343
+  main-is: Main.hs
+  other-modules:
+      Solution
+      Paths_haskell_leetcode
+  hs-source-dirs:
+      problems/p343
+  ghc-options: -O2
+  build-depends:
+      base
+  default-language: Haskell2010
+
 executable p3537
   main-is: Main.hs
   other-modules:
@@ -303,6 +339,18 @@ executable p3537
       Paths_haskell_leetcode
   hs-source-dirs:
       problems/p3537
+  ghc-options: -O2
+  build-depends:
+      base
+  default-language: Haskell2010
+
+executable p357
+  main-is: Main.hs
+  other-modules:
+      Solution
+      Paths_haskell_leetcode
+  hs-source-dirs:
+      problems/p357
   ghc-options: -O2
   build-depends:
       base
@@ -339,6 +387,18 @@ executable p401
       Paths_haskell_leetcode
   hs-source-dirs:
       problems/p401
+  ghc-options: -O2
+  build-depends:
+      base
+  default-language: Haskell2010
+
+executable p479
+  main-is: Main.hs
+  other-modules:
+      Solution
+      Paths_haskell_leetcode
+  hs-source-dirs:
+      problems/p479
   ghc-options: -O2
   build-depends:
       base
@@ -387,6 +447,18 @@ executable p52
       Paths_haskell_leetcode
   hs-source-dirs:
       problems/p52
+  ghc-options: -O2
+  build-depends:
+      base
+  default-language: Haskell2010
+
+executable p526
+  main-is: Main.hs
+  other-modules:
+      Solution
+      Paths_haskell_leetcode
+  hs-source-dirs:
+      problems/p526
   ghc-options: -O2
   build-depends:
       base

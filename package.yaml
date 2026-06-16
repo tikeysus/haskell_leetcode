@@ -254,3 +254,39 @@ executables:
     ghc-options: -O2
     dependencies:
       - base
+  p12:
+    main: Main.hs
+    source-dirs: problems/p12
+    ghc-options: -O2
+    dependencies:
+      - base
+  p264:
+    main: Main.hs
+    source-dirs: problems/p264
+    ghc-options: -O2
+    dependencies:
+      - base
+  p343:
+    main: Main.hs
+    source-dirs: problems/p343
+    ghc-options: -O2
+    dependencies:
+      - base
+  p357:
+    main: Main.hs
+    source-dirs: problems/p357
+    ghc-options: -O2
+    dependencies:
+      - base
+  p479:
+    main: Main.hs
+    source-dirs: problems/p479
+    ghc-options: -O2
+    dependencies:
+      - base
+  p526:
+    main: Main.hs
+    source-dirs: problems/p526
+    ghc-options: -O2
+    dependencies:
+      - base

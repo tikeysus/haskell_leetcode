@@ -9,3 +9,6 @@ lint:
 
 test-harness:
 	@python3 scripts/test_harness.py
+
+test-all:
+	@python3 scripts/test_all.py

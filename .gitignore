@@ -2,3 +2,4 @@
 */Solution.hs
 __pycache__/
 *.pyc
+*.test_cache.json

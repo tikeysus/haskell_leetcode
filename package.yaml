@@ -122,6 +122,12 @@ executables:
     ghc-options: -O2
     dependencies:
       - base
+  p119:
+    main: Main.hs
+    source-dirs: problems/p119
+    ghc-options: -O2
+    dependencies:
+      - base
   p401:
     main: Main.hs
     source-dirs: problems/p401

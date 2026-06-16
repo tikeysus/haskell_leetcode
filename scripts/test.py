@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 """
 Usage: python3 scripts/test.py <problem>
+       python3 scripts/test.py all
   e.g. python3 scripts/test.py p509
 """
-import subprocess, sys, os, glob, shutil, json, time
+import subprocess, sys, os, glob, shutil, json, hashlib, time
+from datetime import datetime, timezone
+
+CACHE_FILE = '.test_cache.json'
 
 # ── ANSI ──────────────────────────────────────────────────────────────────────
 RESET  = '\033[0m'
@@ -19,6 +23,26 @@ def green(s):  return f'{GREEN}{s}{RESET}'
 def red(s):    return f'{RED}{s}{RESET}'
 def yellow(s): return f'{YELLOW}{s}{RESET}'
 def sep():     return dim('─' * 50)
+
+# ── cache ─────────────────────────────────────────────────────────────────────
+def compute_hash(problem):
+    """SHA256 of submission file + all fixture files (sorted)."""
+    h = hashlib.sha256()
+    src = os.path.join('submissions', f'{problem}.hs')
+    with open(src, 'rb') as f: h.update(f.read())
+    for path in sorted(glob.glob(os.path.join('fixtures', problem, '*'))):
+        with open(path, 'rb') as f: h.update(f.read())
+    return h.hexdigest()
+
+def load_cache():
+    if os.path.exists(CACHE_FILE):
+        with open(CACHE_FILE) as f:
+            return json.load(f)
+    return {}
+
+def save_cache(cache):
+    with open(CACHE_FILE, 'w') as f:
+        json.dump(cache, f, indent=2)
 
 # ── pipeline steps ────────────────────────────────────────────────────────────
 def copy_submission(problem):
@@ -82,12 +106,10 @@ def run_batch(binary, cases, timeout):
 def extract_ghc_errors(stderr):
     """Return only the GHC diagnostic lines, stripping Stack boilerplate."""
     lines = stderr.splitlines()
-    # GHC output starts after the last "[N of M] Compiling" line
     start = 0
     for i, line in enumerate(lines):
         if '] Compiling' in line:
             start = i + 1
-    # GHC output ends at the "Error: [S-" Stack footer
     end = len(lines)
     for i in range(start, len(lines)):
         if lines[i].startswith('Error: [S-'):
@@ -105,21 +127,16 @@ def show_compile_error(problem, stderr):
     print(f'  {sep()}')
     print(f'  {red(bold("build failed"))}\n')
 
-# ── main ──────────────────────────────────────────────────────────────────────
-def main():
-    if len(sys.argv) < 2:
-        print('usage: python3 scripts/test.py <problem>')
-        sys.exit(1)
-
-    problem = sys.argv[1]
-
+# ── test one problem ──────────────────────────────────────────────────────────
+def test_problem(problem):
+    """Run all fixtures for one problem. Returns (passed, failed, skipped)."""
     copy_submission(problem)
 
     print(f'\n  {bold(problem)}  {dim("building...")}', end='\r', flush=True)
     ok, stderr = build(problem)
     if not ok:
         show_compile_error(problem, stderr)
-        sys.exit(1)
+        return 0, 0, 1
 
     binary      = get_binary(problem)
     fixture_dir = os.path.join('fixtures', problem)
@@ -127,7 +144,7 @@ def main():
 
     if not cases:
         print(red(f'  no fixtures found in {fixture_dir}/'))
-        sys.exit(1)
+        return 0, 0, 1
 
     timeout = get_timeout(problem)
     print(f'  {bold(problem)}  {dim(str(len(cases)) + " cases")}          ')
@@ -192,7 +209,83 @@ def main():
     else:
         print(f'  {green(str(passed) + " passed")}  {dim("·")}  {red(bold(str(failed) + " failed"))}  {timing}')
     print()
-    sys.exit(0 if failed == 0 else 1)
+    return passed, failed, 0
+
+# ── main ──────────────────────────────────────────────────────────────────────
+def main():
+    if len(sys.argv) < 2:
+        print('usage: python3 scripts/test.py <problem|all>')
+        sys.exit(1)
+
+    arg = sys.argv[1]
+
+    if arg != 'all':
+        _, failed, skipped = test_problem(arg)
+        sys.exit(0 if failed == 0 and skipped == 0 else 1)
+
+    # discover all submissions
+    paths    = sorted(glob.glob(os.path.join('submissions', 'p*.hs')))
+    problems = [os.path.basename(p).replace('.hs', '') for p in paths]
+
+    if not problems:
+        print(red('  no submissions found'))
+        sys.exit(1)
+
+    cache = load_cache()
+
+    total_passed  = 0
+    total_failed  = 0
+    total_skipped = 0
+    problem_results = []  # (problem, p, f, s, cached)
+
+    for problem in problems:
+        digest = compute_hash(problem)
+        entry  = cache.get(problem, {})
+
+        if entry.get('hash') == digest and entry.get('passed'):
+            n = entry.get('cases', '?')
+            print(f'  {bold(problem)}  {dim("cached")}  {green(f"all {n} passed")}')
+            total_passed += entry.get('cases', 0)
+            problem_results.append((problem, entry.get('cases', 0), 0, 0, True))
+            continue
+
+        p, f, s = test_problem(problem)
+        total_passed  += p
+        total_failed  += f
+        total_skipped += s
+
+        cache[problem] = {
+            'hash':      digest,
+            'passed':    (f == 0 and s == 0),
+            'cases':     p + f,
+            'timestamp': datetime.now(timezone.utc).isoformat(),
+        }
+        save_cache(cache)
+
+        problem_results.append((problem, p, f, s, False))
+
+    # summary
+    print(f'\n  {bold("═" * 48)}')
+    print(f'  {bold("summary")}  {dim(str(len(problems)) + " problems")}')
+    print(f'  {dim("─" * 48)}')
+    for problem, p, f, s, cached in problem_results:
+        tag = dim(' (cached)') if cached else ''
+        if s:
+            status = yellow('build error')
+        elif f:
+            status = red(f'{f} failed')
+        else:
+            status = green(f'all {p} passed')
+        print(f'  {bold(problem):<12}  {status}{tag}')
+    print(f'  {dim("─" * 48)}')
+    print(f'  fixtures  {green(str(total_passed) + " passed")}', end='')
+    if total_failed:
+        print(f'  {dim("·")}  {red(bold(str(total_failed) + " failed"))}', end='')
+    if total_skipped:
+        print(f'  {dim("·")}  {yellow(str(total_skipped) + " skipped")}', end='')
+    print(f'\n  {bold("═" * 48)}\n')
+
+    sys.exit(0 if total_failed == 0 and total_skipped == 0 else 1)
 
 if __name__ == '__main__':
     main()

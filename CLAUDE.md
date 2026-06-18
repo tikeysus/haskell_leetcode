@@ -94,7 +94,7 @@ chunksOf n xs = take n xs : chunksOf n (drop n xs)
 
 For `Double` output use `printf "%.5f\n"` inside `mapM_` (it prints directly; don't wrap in `unlines`).
 
-`print` (adds quotes) is used for `Int`, `Integer`, `[Int]`, `[[Int]]`, `[String]`, and `Bool`. `putStrLn` (no quotes) for `String` and `Char`.
+`print` (adds quotes) is used for `Int`, `[Int]`, `[[Int]]`, and `[String]`. `putStrLn` (no quotes) for `String`.
 
 Real examples:
 
@@ -159,7 +159,6 @@ main = do
 | `[Int]` or `[String]` | JSON array (order doesn't matter; test.py sorts both sides) |
 | `[[Int]]` | JSON array of arrays; test.py sorts outer list (rows), not inner |
 | `Double` | 5 decimal places, e.g. `2.00000` |
-| `Char` | single raw character, no quotes |
 
 Fixture files are zero-padded: `00.in`/`00.out` for sets under 100, `000.in`/`000.out` for sets of 100+.
 
@@ -185,13 +184,14 @@ import Solution (Tree(..), solveFn)
 import Data.List (intercalate)
 
 serialize :: Tree Int -> String
-serialize t = "[" ++ intercalate "," (map showNode (levelOrder [t])) ++ "]"
+serialize t = "[" ++ intercalate "," (map showNode (trimNulls (levelOrder [t]))) ++ "]"
   where
     showNode Nothing  = "null"
     showNode (Just x) = show x
-    levelOrder []              = []
-    levelOrder (Leaf   : rest) = Nothing : levelOrder rest
-    levelOrder (Node l v r : rest) = Just v : levelOrder (rest ++ [l, r])
+    trimNulls = reverse . dropWhile (== Nothing) . reverse
+    levelOrder []                  = []
+    levelOrder (Leaf       : rest) = Nothing : levelOrder rest
+    levelOrder (Node l v r : rest) = Just v  : levelOrder (rest ++ [l, r])
 
 main :: IO ()
 main = interact $ unlines . map (serializeTrees . solveFn . read) . lines

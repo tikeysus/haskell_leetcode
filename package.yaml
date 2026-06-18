@@ -290,3 +290,27 @@ executables:
     ghc-options: -O2
     dependencies:
       - base
+  p62:
+    main: Main.hs
+    source-dirs: problems/p62
+    ghc-options: -O2
+    dependencies:
+      - base
+  p172:
+    main: Main.hs
+    source-dirs: problems/p172
+    ghc-options: -O2
+    dependencies:
+      - base
+  p279:
+    main: Main.hs
+    source-dirs: problems/p279
+    ghc-options: -O2
+    dependencies:
+      - base
+  p412:
+    main: Main.hs
+    source-dirs: problems/p412
+    ghc-options: -O2
+    dependencies:
+      - base

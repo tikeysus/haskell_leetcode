@@ -98,12 +98,14 @@ executables:
     ghc-options: -O2
     dependencies:
       - base
+      - containers
   p51:
     main: Main.hs
     source-dirs: problems/p51
     ghc-options: -O2
     dependencies:
       - base
+      - containers
   p89:
     main: Main.hs
     source-dirs: problems/p89
